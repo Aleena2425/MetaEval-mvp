@@ -6,15 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
-import { Zap, Mail, Lock, ArrowRight } from "lucide-react";
+import { Zap, User, Mail, Lock, ArrowRight } from "lucide-react";
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleLogin = () => {
-    // For now, just redirect after "login"
+  const handleSignup = () => {
+    // For now, just redirect after "signup"
     router.push("/dashboard");
   };
 
@@ -31,13 +33,27 @@ export default function LoginPage() {
             <div className="w-16 h-16 bg-gradient-to-r from-primary via-secondary to-accent rounded-full flex items-center justify-center mx-auto mb-4">
               <Zap className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-2xl font-bold text-white">Welcome Back</CardTitle>
+            <CardTitle className="text-2xl font-bold text-white">Create Account</CardTitle>
             <CardDescription className="text-gray-400">
-              Sign in to your MetaEval account to continue
+              Join MetaEval and start benchmarking AI models today
             </CardDescription>
           </CardHeader>
           
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white">Full Name</label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="pl-10 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 focus:border-primary"
+                />
+              </div>
+            </div>
+            
             <div className="space-y-2">
               <label className="text-sm font-medium text-white">Email</label>
               <div className="relative">
@@ -58,7 +74,7 @@ export default function LoginPage() {
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder="Create a password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 focus:border-primary"
@@ -66,19 +82,33 @@ export default function LoginPage() {
               </div>
             </div>
             
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white">Confirm Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  type="password"
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="pl-10 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 focus:border-primary"
+                />
+              </div>
+            </div>
+            
             <Button 
-              onClick={handleLogin} 
+              onClick={handleSignup} 
               className="w-full glow"
               variant="gradient"
             >
-              Sign In
+              Create Account
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
             
             <div className="text-center text-sm text-gray-400">
-              Don't have an account?{" "}
-              <Link href="/signup" className="text-primary hover:underline">
-                Sign up
+              Already have an account?{" "}
+              <Link href="/login" className="text-primary hover:underline">
+                Sign in
               </Link>
             </div>
           </CardContent>
