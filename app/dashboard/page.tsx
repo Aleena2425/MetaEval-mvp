@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { BarChart3, Trophy, Clock, DollarSign, TrendingUp, Zap } from "lucide-react";
 
+<<<<<<< Updated upstream
 export default function Dashboard() {
   const [results, setResults] = useState<any[]>([]);
   const [explanation, setExplanation] = useState("");
@@ -166,6 +167,170 @@ export default function Dashboard() {
                   <span className="text-xs text-gray-400">View previous benchmarks</span>
                 </Button>
               </div>
+=======
+// Define types for result and form data
+type Result = {
+  rank: number;
+  model: string;
+  score: number;
+  speed: string;
+  cost: string;
+  error?: string | null;
+};
+
+type FormData = {
+  prompt: string;
+  taskType: string;
+  constraints?: string;
+  selectedModels?: string[];
+};
+
+export default function Dashboard() {
+  const [results, setResults] = useState<Result[]>([]);
+  const [explanation, setExplanation] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleRun = async (data: FormData) => {
+    console.log("Running with config:", data);
+
+    setLoading(true);
+    setError("");
+    setResults([]);
+
+    try {
+      // Call your backend API
+      const response = await fetch('http://localhost:8000/benchmark', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: data.prompt,
+          task_type: data.taskType,
+          constraints: data.constraints || "",
+          models: data.selectedModels || ["GPT-4", "Gemini Pro"],
+          timeout_per_model: 30,
+          max_concurrent: 3
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      // Transform backend response to match your UI format
+      if (result.results && typeof result.results === 'object') {
+        const transformedResults: Result[] = Object.entries(result.results).map(([modelName, metrics]: [string, any]) => ({
+          rank: metrics.rank || 0,
+          model: modelName,
+          score: metrics.composite_score || 0,
+          speed: `${((metrics.response_time_ms || 0) / 1000).toFixed(1)}s`,
+          cost: `$${(metrics.cost_usd || 0).toFixed(4)}`,
+          error: metrics.error
+        })).sort((a, b) => a.rank - b.rank);
+
+        setResults(transformedResults);
+
+        // Set explanation based on results
+        if (result.summary?.recommended_model) {
+          setExplanation(
+            `${result.summary.recommended_model.name} is recommended with a score of ${result.summary.recommended_model.score}/10. ` +
+            `Total cost: $${(result.summary.total_cost || 0).toFixed(4)}, ` +
+            `Average response time: ${((result.summary.avg_response_time || 0) / 1000).toFixed(1)}s`
+          );
+        }
+      }
+
+    } catch (err: any) {
+      console.error('Benchmark failed:', err);
+      setError(`Failed to run benchmark: ${err.message}`);
+
+      // Fallback to mock data for demo
+      setResults([
+        { rank: 1, model: "GPT-4", score: 8.7, speed: "1.2s", cost: "$0.03", error: null },
+        { rank: 2, model: "Gemini Pro", score: 8.3, speed: "1.0s", cost: "$0.00", error: null },
+        { rank: 3, model: "Llama-3", score: 7.9, speed: "1.5s", cost: "$0.00", error: null },
+      ]);
+      setExplanation("Using mock data - backend connection failed. Check console for details.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-gray-900 text-gray-100 p-8">
+      <h1 className="text-3xl font-bold mb-6">MetaEval Dashboard</h1>
+
+      {/* Form */}
+      <InputForm onRun={handleRun} />
+
+      {/* Loading State */}
+      {loading && (
+        <div className="mt-6 p-4 bg-blue-900/20 border border-blue-600 rounded-lg">
+          <div className="flex items-center space-x-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-400"></div>
+            <span>Running benchmark... This may take up to 30 seconds.</span>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="mt-6 p-4 bg-red-900/20 border border-red-600 rounded-lg">
+          <h3 className="font-semibold text-red-400">Error</h3>
+          <p className="text-red-300">{error}</p>
+        </div>
+      )}
+
+      {/* Results */}
+      {results.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-xl font-semibold mb-4">Results</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left bg-gray-800 rounded-lg overflow-hidden">
+              <thead className="bg-gray-700">
+                <tr>
+                  <th className="py-3 px-4">Rank</th>
+                  <th className="py-3 px-4">Model</th>
+                  <th className="py-3 px-4">Score</th>
+                  <th className="py-3 px-4">Speed</th>
+                  <th className="py-3 px-4">Cost</th>
+                  <th className="py-3 px-4">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.map((r) => (
+                  <tr key={r.model} className="border-b border-gray-700 hover:bg-gray-750">
+                    <td className="py-3 px-4">#{r.rank}</td>
+                    <td className="py-3 px-4 font-medium">{r.model}</td>
+                    <td className="py-3 px-4">
+                      <span className={`font-semibold ${r.score >= 8 ? 'text-green-400' : r.score >= 6 ? 'text-yellow-400' : 'text-red-400'}`}>
+                        {r.score}/10
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">{r.speed}</td>
+                    <td className="py-3 px-4">{r.cost}</td>
+                    <td className="py-3 px-4">
+                      {r.error ? (
+                        <span className="text-red-400">Error: {r.error}</span>
+                      ) : (
+                        <span className="text-green-400">Success</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {explanation && (
+            <div className="p-4 rounded-lg bg-gray-800 border border-gray-700 mt-6">
+              <h3 className="text-lg font-semibold mb-2">Analysis</h3>
+              <p className="text-gray-300">{explanation}</p>
+>>>>>>> Stashed changes
             </div>
           )}
         </div>
